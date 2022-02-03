@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- displays site properly based on user's device -->
+
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32x32.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+  
+  <title>Frontend Mentor | IP Address Tracker</title>
+
+  <!-- Feel free to remove these styles or customise in your own stylesheet 👍 -->
+  <style>
+    .attribution { font-size: 11px; text-align: center; }
+    .attribution a { color: hsl(228, 45%, 44%); }
+    h1{
+      color:white;
+      padding:10px;
+    }
+    *{
+      margin:0;
+    }
+    span{
+      display: block;
+      color:  hsl(0, 0%, 59%);
+      text-align: left;
+    }
+    h2{
+      margin-top: 20px;
+      color: black;
+    }
+    .clearfix::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+    #ipAddress, #location, #timezone{
+      border-right: 1px solid black;
+    }
+    span:not(:last-child) span{
+      border:none;
+    } 
+    
+    
+  </style>
+</head>
+<body>
+  <div style="background-image: url(images/pattern-bg.png); height:250px; background-repeat: no-repeat; position: relative; background-size: cover; text-align: center;">
+
+    <h1 >IP Address Tracker</h1>
+    <form style=" width:100%; justify-content: center; padding-top: 40px; display:flex; align-items: center">
+      <input style="height:45px; font-size: 16px; width:400px; border:none; border-radius: 12px 0 0 12px; padding-left: 10px;" name="ip" type="text" placeholder="Search for any IP address or domain"> <button  style="width:50px; height:50px; background-color:black; display: inline-block; border:none; border-radius: 0 12px 12px 0" for="ip"> <img style="display:block; margin:auto;" src="images/icon-arrow.svg" /></button>
+    </form>
+    <div class="clearfix" style="background-color:white; position:absolute; min-width: 900px; height:100px; bottom:-70px; z-index:1000; display:flex;  justify-content: space-between; padding: 20px 0; left: 50%; margin-left:-450px; border-radius: 20px" >
+      <span style="float:left; margin-left:20px; padding-right:20px;" id="ipAddress"><span>IP Address </span> <h2></h2></span>
+      <span style="float:left; margin-left:20px; padding-right:20px;" id="location" ><span>Location </span>  <h2></h2></span>
+      <span style="float:left; margin-left:20px; padding-right:20px; min-width:200px" id="timezone"><span>Timezone</span> 
+        <h2> UTC <!-- add offset value dynamically using the API --> <span style="color:black; display: inline;"></span></h2>
+      </span>
+      <span style="float:left; margin-left:20px; padding-right:20px;" id="isp"><span>ISP</span> <h2></h2></span>
+
+    </div>
+  </div>
+
+  
+  
+  <div  style="height:500px;" id="map"> </div>
+  
+  <div class="attribution">
+    Challenge by <a href="https://www.frontendmentor.io?ref=challenge" target="_blank">Frontend Mentor</a>. 
+    Coded by <a href="#">Your Name Here</a>.
+  </div>
+</body>
+
+<script>
+  let isfirst=true;
+  fetch(`https://geo.ipify.org/api/v2/country,city?apiKey=at_dD1EuvAPO02QCJxUPRWiheb4DHEA9&ipAddress=8.8.8.8`)
+      .then(response=> response.json())
+      .then(data=>{ 
+        initializeMap(data);
+        isfirst=false;
+        addData(data);
+    });
+
+  function addData(data){
+    document.querySelector("#ipAddress h2").innerHTML=data["ip"];
+    document.querySelector("#location h2 ").innerHTML=data["location"]["city"]+", "+data["location"]["region"];
+    document.querySelector("#timezone h2 span").innerHTML=data["location"]["timezone"];
+    document.querySelector("#isp h2").innerHTML=data["isp"];
+  }
+
+  function initializeMap(data){
+    if(isfirst){
+      L.marker([data["location"]["lat"],data["location"]["lng"]]).addTo(map)
+      .bindPopup('IP adress location')
+      .openPopup();
+
+    }else{
+      map.setView([data["location"]["lat"],data["location"]["lng"]]);
+      L.marker([data["location"]["lat"],data["location"]["lng"]]).addTo(map)
+      .bindPopup('IP adress location')
+      .openPopup();
+    }
+    
+  }
+
+  let map=L.map('map').setView([51.505, -0.09], 13)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  let form=document.querySelector("form");
+  form.addEventListener("submit",(e)=>{
+    e.preventDefault();
+    let ip=document.querySelector("input").value;
+    fetch(`https://geo.ipify.org/api/v2/country,city?apiKey=at_dD1EuvAPO02QCJxUPRWiheb4DHEA9&ipAddress=${ip}`)
+      .then(response=> response.json())
+      .then(data=>{ 
+        initializeMap(data);
+        isfirst=false;
+        addData(data);
+    });
+   
+    
+  })
+
+/*
+   var map = L.map('map').setView([51.505, -0.09], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+L.marker([51.5, -0.09]).addTo(map)
+    .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
+    .openPopup();
+   */
+</script>
+</html>
